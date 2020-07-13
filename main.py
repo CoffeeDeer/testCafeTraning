@@ -7,8 +7,11 @@ class TestCase:
         result.testStarted()
 
         self.setUp()
-        method = getattr(self, self.name)
-        method()
+        try:
+            method = getattr(self, self.name)
+            method()
+        except:
+            result.testFailed()
         self.tearDown()
 
         return result
@@ -34,16 +37,19 @@ class WasRun(TestCase):
     def tearDown(self):
         self.log = self.log + "tearDown "
 
+    def testBrokenMethod(self):
+        raise Exception
+
 
 class TestCaseTest(TestCase):
     def setUp(self):
-        print('TestCaseTest SetUp')
+        #print('TestCaseTest SetUp')
         self.test = WasRun("testMethod")
 
     def testTemplateMethod(self):
         test = WasRun('testMethod')
         test.run()
-        print(test.log)
+        # print(test.log)
         assert('setUp testMethod tearDown ' == test.log)
 
     def testFailedResult(self):
@@ -51,20 +57,28 @@ class TestCaseTest(TestCase):
         result = test.run()
         assert("1 run, 1 faild" == result.smmary())
 
+    def testFaildResultFormatting(self):
+        result = TestResult()
+        result.testStarted()
+        result.testFailed()
+        assert("1 run, 1 failed" == result.summary())
 
 
 class TestResult():
     def __init__(self):
         self.runCount = 0
-        self.failCount = 0
+        self.failureCount = 0
 
     def testStarted(self):
         self.runCount += 1
 
+    def testFailed(self):
+        self.failureCount += 1
+
     def summary(self):
-        return "{0} run, {1} faild".format(self.runCount, self.runCount)
+        return "{0} run, {1} failed".format(self.runCount, self.failureCount)
 
 
 TestCaseTest("testTemplateMethod").run()
 TestCaseTest("testFailedResult").run()
-
+TestCaseTest("testFaildResultFormatting").run()
