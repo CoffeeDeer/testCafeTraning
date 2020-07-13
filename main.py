@@ -3,12 +3,21 @@ class TestCase:
         self.name = name
 
     def run(self):
+        result = TestResult()
+        result.testStarted()
+
         self.setUp()
         method = getattr(self, self.name)
         method()
+        self.tearDown()
+
+        return result
 
     def setUp(self):
-        print("when this")
+        pass
+
+    def tearDown(self):
+        pass
 
 
 class WasRun(TestCase):
@@ -17,35 +26,45 @@ class WasRun(TestCase):
         TestCase.__init__(self, name)
 
     def testMethod(self):
-        self.wasRun = 1
+        self.log = self.log + "testMethod "
 
     def setUp(self):
-        print('is called')
-        self.wasSetUp = 1
+        self.log = "setUp "
+
+    def tearDown(self):
+        self.log = self.log + "tearDown "
 
 
 class TestCaseTest(TestCase):
-    def testRunning(self):
-        test = WasRun("testMethod")
-        assert(not test.wasRun)
+    def setUp(self):
+        print('TestCaseTest SetUp')
+        self.test = WasRun("testMethod")
+
+    def testTemplateMethod(self):
+        test = WasRun('testMethod')
         test.run()
-        assert(test.wasRun)
+        print(test.log)
+        assert('setUp testMethod tearDown ' == test.log)
 
-    #19
-    def testSetUp(self):
-        test = WasRun("testMethod")
-        test.run()
-        assert(test.wasSetUp)
-
-
-#TestCaseTest("testRunning").run()
-TestCaseTest("testSetUp").run()
-
-"""
-
-테스트케이스 테스트 객체 생성
-생성자 호출 - testcase __init__ 이름 입력
-run 실행
+    def testFailedResult(self):
+        test = WasRun("testBrokenMethod")
+        result = test.run()
+        assert("1 run, 1 faild" == result.smmary())
 
 
-"""
+
+class TestResult():
+    def __init__(self):
+        self.runCount = 0
+        self.failCount = 0
+
+    def testStarted(self):
+        self.runCount += 1
+
+    def summary(self):
+        return "{0} run, {1} faild".format(self.runCount, self.runCount)
+
+
+TestCaseTest("testTemplateMethod").run()
+TestCaseTest("testFailedResult").run()
+
